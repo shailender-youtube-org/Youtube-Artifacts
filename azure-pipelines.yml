@@ -1,0 +1,45 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger: none
+
+pool:
+  vmImage: windows-latest
+
+variables:
+  resourceGroupName: 'xxxxx'
+  location: 'Australia East'
+  vnetTemplate: 'azuredeploy.json'
+  vnetParameters: 'azuredeploy.parameters.json'
+
+steps:
+- task: AzurePowerShell@5
+  inputs:
+    azureSubscription: 'demo-wif-auto'
+    ScriptType: 'InlineScript'
+    Inline: |
+      New-AzResourceGroup -Name $(resourceGroupName) -Location "$(location)"
+    azurePowerShellVersion: 'LatestVersion'
+
+- task: AzureKeyVault@2
+  inputs:
+    azureSubscription: 'xxxxxxx'
+    KeyVaultName: 'xxxxx'
+    SecretsFilter: '*'
+    RunAsPreJob: false
+
+- task: AzureResourceManagerTemplateDeployment@3
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: 'xxxxxx'
+    subscriptionId: 'xxxxxx'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: '$(resourceGroupName)'
+    location: 'Australia East'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(vnetTemplate)'
+    csmParametersFile: '$(vnetParameters)'
+    deploymentMode: 'Incremental'
+    overrideParameters: '-adminUsername $(adminuser) -adminPassword $(adminpassword)'
